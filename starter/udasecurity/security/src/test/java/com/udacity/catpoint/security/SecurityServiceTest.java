@@ -37,7 +37,7 @@ public class SecurityServiceTest {
 
     private Set<Sensor> getSensors(boolean active) {
         Set<Sensor> sensors = new HashSet<>();
-        for(int i = 0; i < 5; i++) {
+        for(int i = 0; i < 4; i++) {
             sensors.add(new Sensor(UUID.randomUUID().toString(), SensorType.DOOR));
         }
         sensors.forEach(it -> it.setActive(active));
@@ -146,6 +146,7 @@ public class SecurityServiceTest {
     void alarmArmed_resetAllSensorsToInactive(ArmingStatus armingStatus) {
         Set<Sensor> sensors = getSensors(true);
         when(securityRepository.getSensors()).thenReturn(sensors);
+        when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.PENDING_ALARM);
         securityService.setArmingStatus(armingStatus);
         sensors.forEach(it -> assertFalse(it.getActive()));
     }
