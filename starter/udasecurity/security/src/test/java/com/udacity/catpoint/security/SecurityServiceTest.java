@@ -37,7 +37,7 @@ public class SecurityServiceTest {
 
     private Set<Sensor> getSensors(boolean active) {
         Set<Sensor> sensors = new HashSet<>();
-        for(int i = 0; i < 4; i++) {
+        for(int i = 0; i < 5; i++) {
             sensors.add(new Sensor(UUID.randomUUID().toString(), SensorType.DOOR));
         }
         sensors.forEach(it -> it.setActive(active));
@@ -76,7 +76,7 @@ public class SecurityServiceTest {
         Set<Sensor> sensors = getSensors(false);
         Sensor firstSensor = sensors.iterator().next();
         firstSensor.setActive(true);
-//        when(securityRepository.getSensors()).thenReturn(sensors);
+        when(securityRepository.getSensors()).thenReturn(sensors);
         when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.PENDING_ALARM);
 
         securityService.changeSensorActivationStatus(firstSensor, false);
@@ -147,7 +147,6 @@ public class SecurityServiceTest {
         securityService.setArmingStatus(ArmingStatus.DISARMED);
         Set<Sensor> sensors = getSensors(true);
         when(securityRepository.getSensors()).thenReturn(sensors);
-        when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.PENDING_ALARM);
         securityService.setArmingStatus(armingStatus);
         sensors.forEach(it -> assertFalse(it.getActive()));
     }
@@ -156,8 +155,9 @@ public class SecurityServiceTest {
     @Test
     void alarmArmedHome_identifiesCat_changeToAlarm() {
         when(fakeImageService.imageContainsCat(any(), anyFloat())).thenReturn(true);
-        securityService.processImage(mock(BufferedImage.class));
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
+        when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
+        securityService.processImage(mock(BufferedImage.class));
         verify(securityRepository).setAlarmStatus(AlarmStatus.ALARM);
     }
 
