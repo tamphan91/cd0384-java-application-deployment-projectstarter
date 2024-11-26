@@ -144,7 +144,6 @@ public class SecurityServiceTest {
     @ParameterizedTest
     @EnumSource(value = ArmingStatus.class, names = {"ARMED_HOME", "ARMED_AWAY"})
     void alarmArmed_resetAllSensorsToInactive(ArmingStatus armingStatus) {
-        securityService.setArmingStatus(ArmingStatus.DISARMED);
         Set<Sensor> sensors = getSensors(true);
         when(securityRepository.getSensors()).thenReturn(sensors);
         securityService.setArmingStatus(armingStatus);
@@ -155,7 +154,6 @@ public class SecurityServiceTest {
     @Test
     void alarmArmedHome_identifiesCat_changeToAlarm() {
         when(fakeImageService.imageContainsCat(any(), anyFloat())).thenReturn(true);
-        securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
         when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
         securityService.processImage(mock(BufferedImage.class));
         verify(securityRepository).setAlarmStatus(AlarmStatus.ALARM);

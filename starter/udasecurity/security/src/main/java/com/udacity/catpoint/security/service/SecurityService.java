@@ -38,9 +38,10 @@ public class SecurityService {
      */
     public void setArmingStatus(ArmingStatus armingStatus) {
         if (armingStatus == ArmingStatus.DISARMED) {
+            getSensors().forEach(sensor -> sensor.setActive(true));
             setAlarmStatus(AlarmStatus.NO_ALARM);
         } else {
-            securityRepository.getSensors().forEach(sensor -> sensor.setActive(false));
+            getSensors().forEach(sensor -> sensor.setActive(false));
         }
         securityRepository.setArmingStatus(armingStatus);
     }
@@ -55,13 +56,20 @@ public class SecurityService {
         if (cat && getArmingStatus() == ArmingStatus.ARMED_HOME) {
             setAlarmStatus(AlarmStatus.ALARM);
         } else {
-            boolean allSensorInactive = securityRepository.getSensors().stream().noneMatch(Sensor::getActive);
-            if(allSensorInactive) {
+            boolean allSensorInactive = isAllSensorsInactive();
+            if(!cat && allSensorInactive) {
                 setAlarmStatus(AlarmStatus.NO_ALARM);
             }
         }
 
         statusListeners.forEach(sl -> sl.catDetected(cat));
+    }
+
+    /**
+     * Internal method to check if all sensors are inactive
+     */
+    private boolean isAllSensorsInactive() {
+        return getSensors().stream().noneMatch(Sensor::getActive);
     }
 
     /**
@@ -91,10 +99,10 @@ public class SecurityService {
      * Internal method for updating the alarm status when a sensor has been activated.
      */
     private void handleSensorActivated() {
-        if (securityRepository.getArmingStatus() == ArmingStatus.DISARMED) {
+        if (getArmingStatus() == ArmingStatus.DISARMED) {
             return; //no problem if the system is disarmed
         }
-        switch (securityRepository.getAlarmStatus()) {
+        switch (getAlarmStatus()) {
             case NO_ALARM -> setAlarmStatus(AlarmStatus.PENDING_ALARM);
             case PENDING_ALARM -> setAlarmStatus(AlarmStatus.ALARM);
         }
@@ -104,7 +112,7 @@ public class SecurityService {
      * Internal method for updating the alarm status when a sensor has been deactivated
      */
     private void handleSensorDeactivated() {
-        boolean allSensorInactive = securityRepository.getSensors().stream().noneMatch(Sensor::getActive);
+        boolean allSensorInactive = isAllSensorsInactive();
         if (Objects.requireNonNull(securityRepository.getAlarmStatus()) == AlarmStatus.PENDING_ALARM) {
             if (allSensorInactive) {
                 setAlarmStatus(AlarmStatus.NO_ALARM);
