@@ -87,8 +87,11 @@ public class SecurityServiceTest {
     @Test
     void alarmActive_sensorChange_noEffect() {
         when(securityRepository.getAlarmStatus()).thenReturn(AlarmStatus.ALARM);
-
         sensor.setActive(false);
+        securityService.changeSensorActivationStatus(sensor, true);
+        verify(securityRepository, never()).setAlarmStatus(any(AlarmStatus.class));
+
+        when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.DISARMED);
         securityService.changeSensorActivationStatus(sensor, true);
         verify(securityRepository, never()).setAlarmStatus(any(AlarmStatus.class));
 
@@ -155,8 +158,9 @@ public class SecurityServiceTest {
     @Test
     void alarmArmedHome_identifiesCat_changeToAlarm() {
         when(fakeImageService.imageContainsCat(any(), anyFloat())).thenReturn(true);
-        when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
+        when(securityRepository.getArmingStatus()).thenReturn(ArmingStatus.DISARMED);
         securityService.processImage(mock(BufferedImage.class));
+        securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
         verify(securityRepository).setAlarmStatus(AlarmStatus.ALARM);
     }
 
